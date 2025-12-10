@@ -1,4 +1,4 @@
-#include "DJControllerService.h"
+    #include "DJControllerService.h"
 #include "MP3Track.h"
 #include "WAVTrack.h"
 #include <iostream>
@@ -10,8 +10,21 @@ DJControllerService::DJControllerService(size_t cache_size)
  * TODO: Implement loadTrackToCache method
  */
 int DJControllerService::loadTrackToCache(AudioTrack& track) {
-    // Your implementation here 
-    return 0; // Placeholder
+    if (cache.contains(track.get_title())){
+        cache.get(track.get_title());
+        return 0;
+    }
+    AudioTrack* rawPtr = track.clone().release();
+    if (!rawPtr){
+        std::cout << "[ERROR] Track: " << track.get_title() << "failed to clone.";
+        return 0;
+    }
+    rawPtr->load();
+    rawPtr->analyze_beatgrid();
+    PointerWrapper<AudioTrack> wrap = PointerWrapper<AudioTrack>(rawPtr);
+    bool result = cache.put(std::move(wrap));
+    if (result){return -1;}
+    return 0;
 }
 
 void DJControllerService::set_cache_size(size_t new_size) {
@@ -28,6 +41,5 @@ void DJControllerService::displayCacheStatus() const {
  * TODO: Implement getTrackFromCache method
  */
 AudioTrack* DJControllerService::getTrackFromCache(const std::string& track_title) {
-    // Your implementation here
-    return nullptr; // Placeholder
+    return cache.get(track_title);
 }
